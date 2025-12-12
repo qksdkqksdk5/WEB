@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>한국식 교통신호등 시뮬레이터</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f0f0; }
+  .traffic-light {
+    width: 120px; height: 320px;
+    background: #222; border-radius: 20px;
+    padding: 20px 0; margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .light {
+    width: 80px; height: 80px;
+    margin: 15px auto;
+    border-radius: 50%;
+    background: #333;
+    transition: all 0.4s;
+  }
+  .red    { background: #900 !important; box-shadow: 0 0 30px #f00; }
+  .yellow { background: #990 !important; box-shadow: 0 0 30px #ff0; }
+  .green  { background: #090 !important; box-shadow: 0 0 30px #0f0; }
+
+  .pedestrian {
+    width: 100px; height: 180px;
+    background: #111; border-radius: 15px;
+    margin: 30px auto; padding: 15px 0;
+  }
+  .ped-light {
+    width: 60px; height: 60px;
+    margin: 10px auto;
+    border-radius: 10px;
+    background: #333;
+  }
+  .ped-red    { background: #c00 !important; }
+  .ped-green  { background: #0a0 !important; animation: blink 1s infinite; }
+
+  .countdown {
+    font-size: 48px; font-weight: bold; margin-top: 20px; color: #333;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+
+<h1>한국 교통신호등 시뮬레이터 (2025 버전)</h1>
+
+<div class="traffic-light">
+  <div class="light" id="red"></div>
+  <div class="light" id="yellow"></div>
+  <div class="light" id="green"></div>
+</div>
+
+<div class="pedestrian">
+  <div class="ped-light" id="pedRed">STOP</div>
+  <div class="ped" id="pedGreen">GO</div>
+</div>
+
+<div class="countdown" id="timer">30</div>
+
+<button onclick="startTrafficLight()" style="margin-top:30px; padding:10px 20px; font-size:18px;">
+  신호등 시작
+</button>
+
+<script>
+// 한국 교통신호등 함수 (2025 규칙 반영)
+function startTrafficLight() {
+  const red = document.getElementById('red');
+  const yellow = document.getElementById('yellow');
+  const green = document.getElementById('green');
+  const pedRed = document.getElementById('pedRed');
+  const pedGreen = document.getElementById('pedGreen');
+  const timer = document.getElementById('timer');
+
+  let count = 30; // 청색 기본 시간 (조절 가능)
+
+  function clearLights() {
+    red.classList.remove('red');
+    yellow.classList.remove('yellow');
+    green.classList.remove('green');
+    pedRed.classList.remove('ped-red');
+    pedGreen.classList.remove('ped-green');
+  }
+
+  function cycle() {
+    clearLights();
+
+    // 1. 청색 (차량 직진+우회전, 보행자 통행 가능)
+    green.classList.add('green');
+    pedGreen.classList.add('ped-green');
+    count = 30;
+    timer.textContent = count;
+
+    let greenInterval = setInterval(() => {
+      count--;
+      timer.textContent = count;
+      if (count <= 0) {
+        clearInterval(greenInterval);
+        nextPhase();
+      }
+    }, 1000);
+
+    function nextPhase() {
+      clearLights();
+      
+      // 2. 황색 (3초)
+      yellow.classList.add('yellow');
+      pedGreen.classList.remove('ped-green'); // 보행자 신호 꺼짐
+      count = 3;
+      timer.textContent = count;
+
+      let yellowInterval = setInterval(() => {
+        count--;
+        timer.textContent = count;
+        if (count <= 0) {
+          clearInterval(yellowInterval);
+          redPhase();
+        }
+      }, 1000);
+    }
+
+    function redPhase() {
+      clearLights();
+      
+      // 3. 적색 (차량 정지, 보행자도 정지)
+      red.classList.add('red');
+      pedRed.classList.add('ped-red');
+      count = 35; // 적색 + 다음 청색 준비 시간
+      timer.textContent = count;
+
+      let redInterval = setInterval(() => {
+        count--;
+        timer.textContent = count;
+        if (count <= 0) {
+          clearInterval(redInterval);
+          setTimeout(cycle, 1000); // 다시 청색으로!
+        }
+      }, 1000);
+    }
+  }
+
+  // 첫 사이클 시작
+  cycle();
+}
+</script>
+
+</body>
+</html>
